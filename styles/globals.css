@@ -1,0 +1,155 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #f7f7f8;
+  color: #1a1a1a;
+}
+
+.page {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 800px) {
+  .columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.notice {
+  color: #b3261e;
+  font-size: 0.85rem;
+  margin: 0.5rem 0;
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+select,
+input[type='text'] {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.95rem;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+}
+
+/* The select sits inside its <label>, so it is not a flex child and the
+   column gap does not govern it. Keep an 8px gap below the "Provider" label
+   text, but no bottom margin: otherwise it would stack with the column gap
+   and put ~20px between the dropdown and the key-status notice below. */
+select {
+  margin: 0.5rem 0 0;
+}
+
+.muted {
+  color: #666;
+  font-size: 0.85rem;
+  margin: 0.35rem 0;
+}
+
+.link {
+  background: none;
+  border: none;
+  color: #0b57d0;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.85rem;
+  text-align: left;
+  text-decoration: underline;
+}
+
+.suggestions {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.suggestions li button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.suggestions li:hover {
+  background: #eef3fb;
+}
+
+pre.raw {
+  background: #111;
+  color: #d4d4d4;
+  padding: 0.75rem;
+  border-radius: 4px;
+  overflow: auto;
+  font-size: 0.75rem;
+  max-height: 300px;
+}
+
+dl.blob {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  font-size: 0.85rem;
+  margin: 0.5rem 0;
+  word-break: break-word;
+}
+
+dl.blob dt {
+  font-weight: 600;
+  color: #666;
+}
+
+dl.blob dd {
+  margin: 0;
+}
+
+/* The column is a flex stack, so one gap owns the vertical rhythm. Resetting
+   the per-element vertical margins stops them doubling up on inline-block
+   controls (select, input), where margins do not collapse and the
+   dropdown-to-notice gap came out ~2x the notice-to-details gap. Declared
+   last so it wins over the .notice / .muted / dl.blob margins above. */
+.column > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Key-status / error feedback hugs the dropdown like inline validation
+   text: pulled 4px above the normal row gap so dropdown-to-notice is ~8px
+   while every subsequent row pair stays at 12px. Higher specificity than
+   the reset above, so it wins regardless of source order. */
+.column > .notice {
+  margin-top: -0.25rem;
+}
