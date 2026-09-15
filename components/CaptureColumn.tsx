@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { CAPTURE_PROVIDERS, type ProviderId } from '@/lib/providers/meta';
 import type { CanonicalAddress, Suggestion } from '@/lib/schema';
+
+// Leaflet touches window — must never run on the server.
+const MapPin = dynamic(() => import('@/components/MapPin'), { ssr: false });
 
 interface StatusRow {
   id: ProviderId;
@@ -30,12 +34,39 @@ interface RetrieveResponse {
   error?: string;
 }
 
+interface LogResponse {
+  ok: boolean;
+  id?: string;
+  error?: string;
+}
+
 async function getJson<T>(url: string): Promise<T> {
   const res = await fetch(url);
   return (await res.json()) as T;
 }
 
-export default function CaptureColumn() {
+async function postJson<T>(url: string, body: unknown): Promise<T> {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return (await res.json()) as T;
+}
+
+// A successful capture selection, handed to the parent so the Verify column
+// can pre-fill its form and link back to this capture event.
+export interface CapturePick {
+  canonical: CanonicalAddress;
+  captureEventId?: string;
+}
+
+type Verdict = 'correct' | 'incorrect' | null;
+
+// Minimum meaningful query length for a dismissal to count as a miss.
+const MIN_MISS_LENGTH = 3;
+
+export default function CaptureColumn({ onPick }: { onPick: (pick: CapturePick) => void }) {
   const [provider, setProvider] = useState<ProviderId>('google');
   const [statusMap, setStatusMap] = useState<Record<string, StatusRow> | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -46,10 +77,18 @@ export default function CaptureColumn() {
   const [selected, setSelected] = useState<CanonicalAddress | null>(null);
   const [raw, setRaw] = useState<unknown>(null);
   const [openRaw, setOpenRaw] = useState(false);
+  const [verdict, setVerdict] = useState<Verdict>(null);
   const [acLat, setAcLat] = useState<{ server?: number; e2e?: number }>({});
   const [rtLat, setRtLat] = useState<{ server?: number; e2e?: number }>({});
   const seq = useRef(0);
   const lastPick = useRef('');
+  const inputRef = useRef<HTMLInputElement>(null);
+  // Interaction bookkeeping (one log event per interaction: pick or miss).
+  const searchedRef = useRef(false); // an ok autocomplete response landed
+  const listQueryRef = useRef(''); // query that produced the current list
+  const suggestionsRef = useRef<Suggestion[]>([]); // list snapshot for miss output
+  const pickingRef = useRef(false); // suggestion mousedown — suppress the blur miss
+  const captureEventIdRef = useRef<string | null>(null);
 
   // Key status for all providers; fetched once.
   useEffect(() => {
@@ -65,9 +104,15 @@ export default function CaptureColumn() {
     setOptions([]);
     setSelected(null);
     setRaw(null);
+    setOpenRaw(false);
+    setVerdict(null);
     setAcLat({});
     setRtLat({});
     lastPick.current = '';
+    searchedRef.current = false;
+    listQueryRef.current = '';
+    suggestionsRef.current = [];
+    captureEventIdRef.current = null;
     const st = statusMap?.[provider];
     if (st && !st.supported) setNotice('provider adapter not wired yet');
     else if (st && st.status === 'missing') setNotice('trial key missing');
@@ -91,6 +136,10 @@ export default function CaptureColumn() {
         if (res.ok) {
           setOptions(res.suggestions ?? []);
           setAcLat({ server: res.serverMs, e2e: Math.round(performance.now() - start) });
+          // Even an empty list counts as "searched": dismissing it is a miss.
+          searchedRef.current = true;
+          listQueryRef.current = query.trim();
+          suggestionsRef.current = res.suggestions ?? [];
         } else {
           setNotice(res.error ?? 'autocomplete failed');
         }
@@ -101,12 +150,41 @@ export default function CaptureColumn() {
     return () => clearTimeout(timer);
   }, [query, provider, statusMap]);
 
+  // Dismissal without a pick = a miss (only when a real search landed).
+  function logMiss() {
+    if (pickingRef.current || !searchedRef.current) return;
+    const typed = inputRef.current?.value ?? '';
+    if (typed.trim().length < MIN_MISS_LENGTH) {
+      searchedRef.current = false;
+      return;
+    }
+    searchedRef.current = false;
+    const listQuery = listQueryRef.current || typed;
+    postJson('/api/log', {
+      kind: 'capture',
+      event: {
+        typed_text: typed,
+        list_query: listQuery,
+        suggestion_label: null,
+        selected: false,
+        provider,
+        output: suggestionsRef.current,
+        user_verified: null,
+      },
+    });
+  }
+
   async function handlePick(s: Suggestion) {
+    pickingRef.current = false;
+    const typed = inputRef.current?.value ?? '';
+    const listQuery = listQueryRef.current || typed;
+    searchedRef.current = false;
     setQuery(s.label);
     setOptions([]);
     lastPick.current = s.label;
     const start = performance.now();
     setLoading(true);
+    setNotice(null);
     try {
       const res = await getJson<RetrieveResponse>(
         `/api/retrieve?provider=${provider}&id=${encodeURIComponent(s.providerId)}`,
@@ -114,7 +192,25 @@ export default function CaptureColumn() {
       if (res.ok && res.canonical) {
         setSelected(res.canonical);
         setRaw(res.raw ?? null);
+        setVerdict(null);
         setRtLat({ server: res.serverMs, e2e: Math.round(performance.now() - start) });
+        const logged = await postJson<LogResponse>('/api/log', {
+          kind: 'capture',
+          event: {
+            typed_text: typed,
+            list_query: listQuery,
+            suggestion_label: s.label,
+            selected: true,
+            provider,
+            output: res.raw ?? null,
+            user_verified: null,
+          },
+        });
+        if (logged.ok && logged.id) captureEventIdRef.current = logged.id;
+        onPick({
+          canonical: res.canonical,
+          captureEventId: logged.ok && logged.id ? logged.id : undefined,
+        });
       } else {
         setNotice(res.error ?? 'retrieve failed');
       }
@@ -123,6 +219,21 @@ export default function CaptureColumn() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function markVerdict(v: Exclude<Verdict, null>) {
+    setVerdict((prev) => {
+      const next = prev === v ? null : v;
+      if (captureEventIdRef.current) {
+        postJson('/api/log', {
+          action: 'update',
+          kind: 'capture',
+          id: captureEventIdRef.current,
+          user_verified: next === null ? null : next === 'correct',
+        });
+      }
+      return next;
+    });
   }
 
   const status = statusMap?.[provider];
@@ -161,17 +272,32 @@ export default function CaptureColumn() {
       )}
 
       <input
+        ref={inputRef}
         type="text"
         placeholder="Type an address…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
+        onBlur={logMiss}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            logMiss();
+            setOptions([]);
+          }
+        }}
       />
 
       {options.length > 0 && (
         <ul className="suggestions">
           {options.map((s, i) => (
             <li key={i}>
-              <button onClick={() => handlePick(s)}>{s.label}</button>
+              <button
+                onMouseDown={() => {
+                  pickingRef.current = true;
+                }}
+                onClick={() => handlePick(s)}
+              >
+                {s.label}
+              </button>
             </li>
           ))}
         </ul>
@@ -205,6 +331,24 @@ export default function CaptureColumn() {
             <dt>provider id</dt>
             <dd>{selected.providerId || '—'}</dd>
           </dl>
+          <div className="verdict">
+            <span>output correct?</span>
+            <button
+              type="button"
+              className={verdict === 'correct' ? 'on-correct' : ''}
+              onClick={() => markVerdict('correct')}
+            >
+              ✓ correct
+            </button>
+            <button
+              type="button"
+              className={verdict === 'incorrect' ? 'on-incorrect' : ''}
+              onClick={() => markVerdict('incorrect')}
+            >
+              ✗ incorrect
+            </button>
+          </div>
+          <MapPin address={selected} />
           <button type="button" className="link" onClick={() => setOpenRaw(!openRaw)}>
             {openRaw ? 'hide raw output' : 'raw output'}
           </button>
