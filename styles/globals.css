@@ -153,3 +153,94 @@ dl.blob dd {
 .column > .notice {
   margin-top: -0.25rem;
 }
+
+.map-wrap {
+  position: relative;
+  z-index: 0;
+}
+
+.map-pin {
+  background: none;
+  border: none;
+}
+
+.map-pin .pin-dot {
+  width: 12px;
+  height: 12px;
+  background: #d32f2f;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+}
+
+.btn {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.9rem;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #f0f0f0;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Verify column: optional structured fields, two-up on wide screens. */
+.verify-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.verify-fields label {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.verify-fields label > span {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+@media (max-width: 420px) {
+  .verify-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Correct/incorrect judgment row on capture and verify results. */
+.verdict {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+  color: #666;
+  margin: 0.25rem 0;
+}
+
+.verdict button {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.85rem;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.verdict button.on-correct {
+  border-color: #1e7e34;
+  background: #e6f4ea;
+  color: #1e7e34;
+}
+
+.verdict button.on-incorrect {
+  border-color: #b3261e;
+  background: #fce8e6;
+  color: #b3261e;
+}
