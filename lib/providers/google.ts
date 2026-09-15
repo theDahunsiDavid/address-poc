@@ -1,6 +1,7 @@
 import type { AddressProvider } from './types';
 import type { CanonicalAddress, NormalizedResult, Suggestion } from '../schema';
 import { getKey } from '../config';
+import { fetchWithRetry } from '../http';
 
 // Google Places API (New) adapter — capture only (Google's Address Validation
 // API does not cover Nigeria, so verify is intentionally absent).
@@ -34,7 +35,7 @@ export const google: AddressProvider = {
   kind: 'capture',
 
   async autocomplete(query: string): Promise<Suggestion[]> {
-    const res = await fetch(`${BASE}/places:autocomplete`, {
+    const res = await fetchWithRetry(`${BASE}/places:autocomplete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -60,7 +61,7 @@ export const google: AddressProvider = {
   },
 
   async retrieve(placeId: string): Promise<NormalizedResult> {
-    const res = await fetch(`${BASE}/places/${encodeURIComponent(placeId)}`, {
+    const res = await fetchWithRetry(`${BASE}/places/${encodeURIComponent(placeId)}`, {
       headers: {
         'X-Goog-Api-Key': getKey('google'),
         'X-Goog-FieldMask': 'id,formattedAddress,location,addressComponents',
