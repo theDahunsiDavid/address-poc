@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getProvider } from '@/lib/providers';
 import { keyStatus, type ProviderId } from '@/lib/config';
 import { timeCall } from '@/lib/timing';
+import { errorMessage } from '@/lib/errors';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const providerId = String(req.query.provider ?? '');
@@ -26,6 +27,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { result, serverMs } = await timeCall(() => provider.autocomplete(q.trim()));
     return res.status(200).json({ ok: true, suggestions: result, serverMs });
   } catch (err) {
-    return res.status(200).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
+    return res.status(200).json({ ok: false, error: errorMessage(err) });
   }
 }
