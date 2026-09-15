@@ -1,7 +1,13 @@
 // Client-safe provider metadata — safe to import from components AND server
 // routes. No secrets here; key lookup lives in lib/config.ts (server-only).
 
-export type ProviderId = 'google' | 'melissa' | 'precisely' | 'loqate';
+export type ProviderId =
+  | 'google'
+  | 'melissa'
+  | 'precisely'
+  | 'loqate'
+  | 'postgrid'
+  | 'smarty';
 export type ProviderKind = 'capture' | 'verify' | 'both';
 
 export interface ProviderMeta {
@@ -48,6 +54,22 @@ export const PROVIDERS: Record<ProviderId, ProviderMeta> = {
     name: 'Loqate',
     kind: 'both',
     freeTier: '',
+    perLookupPrice: '',
+    minimumCommitment: '',
+  },
+  postgrid: {
+    id: 'postgrid',
+    name: 'PostGrid',
+    kind: 'both',
+    freeTier: '',
+    perLookupPrice: '',
+    minimumCommitment: '',
+  },
+  smarty: {
+    id: 'smarty',
+    name: 'Smarty',
+    kind: 'both',
+    freeTier: '42-day free trial (free testing accounts)',
     perLookupPrice: '',
     minimumCommitment: '',
   },
