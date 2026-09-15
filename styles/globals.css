@@ -2,11 +2,27 @@
   box-sizing: border-box;
 }
 
+:root {
+  --text: #1a1a1a;
+  --label: #4b5563;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --border-strong: #d1d5db;
+  --bg: #f7f7f8;
+  --surface: #fff;
+  --accent: #0b57d0;
+  --danger: #b3261e;
+  --radius-card: 12px;
+  --radius-control: 8px;
+}
+
 body {
   margin: 0;
   font-family: system-ui, -apple-system, sans-serif;
-  background: #f7f7f8;
-  color: #1a1a1a;
+  font-size: 14px;
+  line-height: 1.45;
+  background: var(--bg);
+  color: var(--text);
 }
 
 /* Buttons and other form controls do not inherit font-family from their
@@ -25,10 +41,19 @@ textarea {
   padding: 1.5rem;
 }
 
+h1 {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  margin: 0 0 1.5rem;
+}
+
 .columns {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
+  align-items: start;
 }
 
 @media (max-width: 800px) {
@@ -40,67 +65,88 @@ textarea {
 .column {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 1rem;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+h2 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  margin: 0;
 }
 
 .notice {
-  color: #b3261e;
-  font-size: 0.85rem;
-  margin: 0.5rem 0;
+  color: var(--danger);
+  font-size: 13px;
+  margin: 0;
 }
 
+/* Labels own their field's label->control gap, so no per-control margins. */
 label {
-  display: block;
-  font-size: 0.85rem;
-  color: #444;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--label);
 }
 
 select,
 input[type='text'] {
   width: 100%;
-  padding: 0.5rem;
-  font-size: 0.95rem;
-  border: 1px solid #bbb;
-  border-radius: 4px;
+  padding: 0.5rem 0.625rem;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+}
+
+input[type='text']::placeholder {
+  color: #9aa0a6;
 }
 
 /* Provider dropdowns: force plain white regardless of OS/browser theme. */
 select {
   background: #fff;
-  color: #1a1a1a;
+  color: var(--text);
 }
 
 select option {
   background: #fff;
-  color: #1a1a1a;
+  color: var(--text);
 }
 
-/* The select sits inside its <label>, so it is not a flex child and the
-   column gap does not govern it. Keep an 8px gap below the "Provider" label
-   text, but no bottom margin: otherwise it would stack with the column gap
-   and put ~20px between the dropdown and the key-status notice below. */
-select {
-  margin: 0.5rem 0 0;
+input[type='text']:focus,
+select:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .muted {
-  color: #666;
-  font-size: 0.85rem;
-  margin: 0.35rem 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  margin: 0;
 }
 
 .link {
   background: none;
   border: none;
-  color: #0b57d0;
+  color: var(--accent);
   cursor: pointer;
   padding: 0;
-  font-size: 0.85rem;
+  font-size: 13px;
+  font-weight: 500;
   text-align: left;
+  width: fit-content;
+}
+
+.link:hover {
   text-decoration: underline;
 }
 
@@ -108,8 +154,8 @@ select {
   list-style: none;
   margin: 0;
   padding: 0;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
   max-height: 220px;
   overflow: auto;
 }
@@ -118,11 +164,11 @@ select {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 0.5rem;
+  padding: 0.5rem 0.625rem;
   border: none;
   background: none;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 13px;
 }
 
 .suggestions li:hover {
@@ -133,46 +179,41 @@ pre.raw {
   background: #111;
   color: #d4d4d4;
   padding: 0.75rem;
-  border-radius: 4px;
+  border-radius: var(--radius-control);
   overflow: auto;
-  font-size: 0.75rem;
+  font-size: 12px;
   max-height: 300px;
 }
 
 dl.blob {
   display: grid;
   grid-template-columns: max-content 1fr;
-  gap: 0.25rem 1rem;
-  font-size: 0.85rem;
-  margin: 0.5rem 0;
+  gap: 0.35rem 1rem;
+  font-size: 13px;
+  margin: 0;
   word-break: break-word;
 }
 
 dl.blob dt {
-  font-weight: 600;
-  color: #666;
+  font-weight: 500;
+  color: var(--muted);
 }
 
 dl.blob dd {
   margin: 0;
 }
 
-/* The column is a flex stack, so one gap owns the vertical rhythm. Resetting
-   the per-element vertical margins stops them doubling up on inline-block
-   controls (select, input), where margins do not collapse and the
-   dropdown-to-notice gap came out ~2x the notice-to-details gap. Declared
-   last so it wins over the .notice / .muted / dl.blob margins above. */
+/* The column is a flex stack, so one gap owns the vertical rhythm. */
 .column > * {
   margin-top: 0;
   margin-bottom: 0;
 }
 
 /* Key-status / error feedback hugs the dropdown like inline validation
-   text: pulled 4px above the normal row gap so dropdown-to-notice is ~8px
-   while every subsequent row pair stays at 12px. Higher specificity than
-   the reset above, so it wins regardless of source order. */
+   text: pulled up so dropdown-to-notice is ~8px while every other row pair
+   stays at the full 16px gap. Higher specificity than the reset above. */
 .column > .notice {
-  margin-top: -0.25rem;
+  margin-top: -0.5rem;
 }
 
 .map-wrap {
@@ -195,31 +236,31 @@ dl.blob dd {
 }
 
 .btn {
-  padding: 0.5rem 0.9rem;
-  font-size: 0.9rem;
+  padding: 0.55rem 1rem;
+  font-size: 14px;
   font-weight: 500;
-  border: 1px solid #888;
-  border-radius: 4px;
-  background: #e9e9e9;
-  color: #1a1a1a;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  background: var(--text);
+  color: #fff;
   cursor: pointer;
 }
 
 .btn:hover {
-  background: #ddd;
+  background: #333;
 }
 
 .btn:active {
-  background: #cfcfcf;
+  background: #000;
 }
 
 .btn:focus-visible {
-  outline: 2px solid #0b57d0;
-  outline-offset: 1px;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.45;
   cursor: default;
 }
 
@@ -228,16 +269,6 @@ dl.blob dd {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0.5rem;
-}
-
-.verify-fields label {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.verify-fields label > span {
-  font-size: 0.8rem;
-  color: #666;
 }
 
 @media (max-width: 420px) {
@@ -251,18 +282,24 @@ dl.blob dd {
   display: flex;
   gap: 0.5rem;
   align-items: center;
-  font-size: 0.85rem;
-  color: #666;
-  margin: 0.25rem 0;
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
 }
 
 .verdict button {
-  padding: 0.25rem 0.6rem;
-  font-size: 0.85rem;
-  border: 1px solid #bbb;
-  border-radius: 4px;
+  padding: 0.3rem 0.6rem;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
   background: #fff;
   cursor: pointer;
+}
+
+.verdict button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .verdict button.on-correct {
