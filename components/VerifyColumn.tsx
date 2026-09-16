@@ -1,12 +1,22 @@
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { VERIFY_PROVIDERS, type ProviderId } from '@/lib/providers/meta';
+import { VERIFY_PROVIDERS, type ProviderId, type VerifyCategory } from '@/lib/providers/meta';
 import type { CanonicalAddress } from '@/lib/schema';
 import type { ProviderStatus } from '@/lib/verdict';
 import type { CapturePick } from './CaptureColumn';
 
 // Leaflet touches window — must never run on the server.
 const MapPin = dynamic(() => import('@/components/MapPin'), { ssr: false });
+
+// Verify providers are grouped by the claim their result makes: a
+// postal/reference-database verdict (A) vs a geocoded heuristic match (B) —
+// "the postal DB confirms it" and "there is plausibly a matching location on
+// a map" are different forms of truth, so they get separate headers.
+const VERIFY_GROUP_LABELS: { cat: VerifyCategory; label: string }[] = [
+  { cat: 'postal', label: 'A — Postal / database verification' },
+  { cat: 'geocoded', label: 'B — Geocoded / heuristic validation' },
+];
+const UNCATEGORIZED_VERIFY = VERIFY_PROVIDERS.filter((p) => !p.verifyCategory);
 
 interface StatusRow {
   id: ProviderId;
@@ -223,13 +233,30 @@ export default function VerifyColumn({ prefill }: { prefill: CapturePick | null 
       <label>
         Provider
         <select value={provider} onChange={(e) => setProvider(e.target.value as ProviderId)}>
-          {VERIFY_PROVIDERS.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
+          {VERIFY_GROUP_LABELS.map((g) => (
+            <optgroup key={g.cat} label={g.label}>
+              {VERIFY_PROVIDERS.filter((p) => p.verifyCategory === g.cat).map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </optgroup>
           ))}
+          {UNCATEGORIZED_VERIFY.length > 0 && (
+            <optgroup label="Other">
+              {UNCATEGORIZED_VERIFY.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
       </label>
+      <p className="muted">
+        A: database/postal verification · B: geocoded/heuristic (a plausible location on a map, not a
+        deliverability guarantee)
+      </p>
 
       {notice && <p className="notice">{notice}</p>}
 
