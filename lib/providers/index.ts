@@ -5,6 +5,7 @@ import { precisely } from './precisely';
 import { loqate } from './loqate';
 import { postgrid } from './postgrid';
 import { smarty } from './smarty';
+import { geoapify } from './geoapify';
 
 // Adapters keyed by provider id. API routes look up by the provider query
 // param; new adapters register here.
@@ -16,6 +17,7 @@ export const providers: Record<string, AddressProvider> = {
   loqate,
   postgrid,
   smarty,
+  geoapify,
 };
 
 export function getProvider(id: string): AddressProvider | undefined {
