@@ -51,7 +51,11 @@ h1 {
 
 .columns {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, 1fr) zeroes the content-based minimum of each track: a
+     track's width is a fixed half-share of the container regardless of
+     how wide its content gets (e.g. a long raw-output line), instead of
+     growing and squeezing the sibling column. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 1.5rem;
   align-items: start;
 }
@@ -188,6 +192,11 @@ pre.raw {
   font-size: 12px;
   line-height: 1.55;
   max-height: 300px;
+  /* Long JSON lines wrap onto the next line instead of widening the
+     column; overflow-wrap: anywhere breaks tokens that have no spaces so
+     nothing overflows horizontally. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 dl.blob {
