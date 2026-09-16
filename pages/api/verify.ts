@@ -6,9 +6,9 @@ import { errorMessage } from '@/lib/errors';
 import { providerStatus } from '@/lib/verdict';
 import type { VerifyInput } from '@/lib/providers/types';
 
-// Proxy for the Verify column. Only verify-capable providers (Loqate,
-// Precisely) are accepted. Coordinates are NOT inputs — neither vendor
-// accepts them; they only come back in the output.
+// Proxy for the Verify column. Only providers implementing verify() are
+// accepted (loqate, precisely, postgrid, smarty, geoapify). Coordinates are
+// NOT inputs — vendors don't accept them; they only come back in the output.
 
 function optionalString(v: unknown): string | undefined {
   return typeof v === 'string' && v.trim().length > 0 ? v.trim() : undefined;
