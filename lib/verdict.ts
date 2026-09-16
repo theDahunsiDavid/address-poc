@@ -135,6 +135,28 @@ function precisely(raw: unknown): ProviderStatus {
   }
 }
 
+function geoapify(raw: unknown): ProviderStatus {
+  // Category B — geocoded/heuristic match, NOT a postal-database verdict.
+  // A feature's properties.rank.match_type classifies placement quality:
+  //   full_match   -> exact match at the requested level   -> verified
+  //   same_street  -> street matched, number/locality off -> partial
+  //   nearest_place / fallback_match                      -> none
+  // rank.confidence (0..1) rides along in the raw output — a graded guess,
+  // not a deliverability confirmation (postcodes are often absent in NG).
+  const feature = firstArray(raw).filter(isRecord)[0];
+  if (!feature) return 'none';
+  const props = isRecord(feature.properties) ? feature.properties : feature;
+  const rank = isRecord(props.rank) ? props.rank : {};
+  switch (pick(rank, ['match_type']).toLowerCase()) {
+    case 'full_match':
+      return 'verified';
+    case 'same_street':
+      return 'partial';
+    default:
+      return 'none';
+  }
+}
+
 function mapExact(lowercased: string): ProviderStatus {
   if (lowercased === 'verified') return 'verified';
   if (lowercased === 'partial') return 'partial';
@@ -152,6 +174,8 @@ export function providerStatus(providerId: string, raw: unknown): ProviderStatus
       return postgrid(raw);
     case 'precisely':
       return precisely(raw);
+    case 'geoapify':
+      return geoapify(raw);
     default:
       return 'none';
   }
