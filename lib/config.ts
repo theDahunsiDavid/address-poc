@@ -13,6 +13,7 @@ const KEY_ENV: Record<ProviderId, string> = {
   smarty: 'SMARTY_AUTH_ID',
   geoapify: 'GEOAPIFY_API_KEY',
   postcoder: 'POSTCODER_API_KEY',
+  placekit: 'PLACEKIT_API_KEY',
 };
 
 // Precisely authenticates via OAuth2 client_credentials; the trial dashboard
