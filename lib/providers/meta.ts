@@ -9,7 +9,8 @@ export type ProviderId =
   | 'postgrid'
   | 'smarty'
   | 'geoapify'
-  | 'postcoder';
+  | 'postcoder'
+  | 'placekit';
 export type ProviderKind = 'capture' | 'verify' | 'both';
 
 /**
@@ -113,6 +114,17 @@ export const PROVIDERS: Record<ProviderId, ProviderMeta> = {
     freeTier: 'autocomplete/find free (0 credits)',
     perLookupPrice: '2 credits per retrieve (rest of world)',
     minimumCommitment: 'credit packs or monthly plans',
+  },
+  placekit: {
+    id: 'placekit',
+    name: 'PlaceKit',
+    kind: 'capture',
+    // Search/reverse geocoding only — PlaceKit has no verify/cleanse product.
+    // Pricing (placekit.io/pricing): first 10,000 requests are free every
+    // month; $0.0030 each from 10k to 50k; custom volume plans beyond.
+    freeTier: '10,000 requests/month free (every month)',
+    perLookupPrice: '$0.0030 per request (10k-50k tier)',
+    minimumCommitment: 'pay-as-you-go; custom volume plans',
   },
 };
 
