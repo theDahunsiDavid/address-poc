@@ -12,6 +12,7 @@ const KEY_ENV: Record<ProviderId, string> = {
   postgrid: 'POSTGRID_API_KEY',
   smarty: 'SMARTY_AUTH_ID',
   geoapify: 'GEOAPIFY_API_KEY',
+  postcoder: 'POSTCODER_API_KEY',
 };
 
 // Precisely authenticates via OAuth2 client_credentials; the trial dashboard
