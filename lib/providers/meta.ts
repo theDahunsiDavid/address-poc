@@ -8,7 +8,8 @@ export type ProviderId =
   | 'loqate'
   | 'postgrid'
   | 'smarty'
-  | 'geoapify';
+  | 'geoapify'
+  | 'postcoder';
 export type ProviderKind = 'capture' | 'verify' | 'both';
 
 /**
@@ -100,6 +101,18 @@ export const PROVIDERS: Record<ProviderId, ProviderMeta> = {
     freeTier: '3,000 credits/day (free tier)',
     perLookupPrice: '',
     minimumCommitment: '',
+  },
+  postcoder: {
+    id: 'postcoder',
+    name: 'Postcoder',
+    kind: 'capture',
+    // Address autocomplete only — Postcoder has no verify/cleanse product
+    // (docs sitemap: address lookup, bank/email/mobile validation, OTP).
+    // Pricing (credit-costs page): autocomplete/find is 0 credits;
+    // autocomplete/retrieve is 2 credits rest-of-world (2.4 with addtags).
+    freeTier: 'autocomplete/find free (0 credits)',
+    perLookupPrice: '2 credits per retrieve (rest of world)',
+    minimumCommitment: 'credit packs or monthly plans',
   },
 };
 
