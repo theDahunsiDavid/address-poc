@@ -2,6 +2,7 @@ import type { AddressProvider, VerifyInput } from './types';
 import type { CanonicalAddress, NormalizedResult, Suggestion } from '../schema';
 import { getKey } from '../config';
 import { fetchWithRetry } from '../http';
+import { noMatchError } from '../errors';
 
 // Geoapify (https://geoapify.com) adapter — capture + verify (Category B).
 //
@@ -207,7 +208,7 @@ export const geoapify: AddressProvider = {
     const json = await getJson(`${SEARCH_URL}?${qs.toString()}`);
     const features = featuresOf(json);
     if (features.length === 0) {
-      throw new Error('Geoapify: no spatial match — address not found on map');
+      throw noMatchError('Geoapify: no spatial match — address not found on map');
     }
     return { canonical: toCanonical(propsOf(features[0]), 'geoapify'), raw: json };
   },
