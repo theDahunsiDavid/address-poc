@@ -2,6 +2,7 @@ import type { AddressProvider, VerifyInput } from './types';
 import type { CanonicalAddress, NormalizedResult, Suggestion } from '../schema';
 import { getKey } from '../config';
 import { fetchWithRetry } from '../http';
+import { noMatchError } from '../errors';
 
 // PostGrid (https://postgrid.com) adapter — capture + verify.
 // Contract extracted from their public OpenAPI (guides.postgrid.com/api/openapi.yaml)
@@ -80,7 +81,7 @@ function toCanonical(
   const latS = pick(geo ?? {}, ['latitude', 'lat']);
   const lngS = pick(geo ?? {}, ['longitude', 'lng']);
   const lat = latS ? parseFloat(latS) : undefined;
-  const lng = latS ? parseFloat(lngS) : undefined;
+  const lng = lngS ? parseFloat(lngS) : undefined;
   return {
     line1: pick(rec, ['line1']),
     line2: pick(rec, ['line2', 'line3']) || undefined,
@@ -171,7 +172,7 @@ export const postgrid: AddressProvider = {
       throw new Error(`PostGrid verify: non-JSON response ${text}`);
     }
     const rec = firstAddressRecord(json);
-    if (Object.keys(rec).length === 0) throw new Error('PostGrid: no verified address');
+    if (Object.keys(rec).length === 0) throw noMatchError('PostGrid: no verified address');
     const geo = isRecord(rec.geoData) ? rec.geoData : {};
     return { canonical: toCanonical(rec, 'postgrid', geo), raw: json };
   },
