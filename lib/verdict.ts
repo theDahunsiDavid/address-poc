@@ -91,7 +91,9 @@ function loqate(raw: unknown): ProviderStatus {
   // is the verification class (V verified, G ambiguous). No MatchType field
   // exists on the international response; AQI is a quality grade (A–F).
   const entry = firstArray(raw).filter(isRecord)[0];
-  const match = firstArray(isRecord(entry?.Matches) ? entry.Matches : []).filter(isRecord)[0];
+  // Matches is an ARRAY — firstArray passes arrays through untouched, so pass it
+  // directly (isRecord(array) is false, which would always fall back to []).
+  const match = firstArray(entry?.Matches).filter(isRecord)[0];
   const avc = pick(match ?? {}, ['AVC']).toUpperCase();
   if (avc.startsWith('V')) return 'verified';
   if (avc.startsWith('G')) return 'ambiguous';
