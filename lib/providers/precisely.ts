@@ -2,6 +2,7 @@ import type { AddressProvider, VerifyInput } from './types';
 import type { CanonicalAddress, NormalizedResult, Suggestion } from '../schema';
 import { getKey, getSecret } from '../config';
 import { fetchWithRetry } from '../http';
+import { noMatchError } from '../errors';
 
 // Precisely adapter — capture + verify. Contract live-confirmed 2026-02-16
 // against the working host api.cloud.precisely.com (the older
@@ -220,8 +221,8 @@ export const precisely: AddressProvider = {
     const status = pick(first, ['status']);
     const results = Array.isArray(first.results) ? first.results.filter(isRecord) : [];
     if (status !== 'OK' || results.length === 0) {
-      // ZERO_RESULTS = no match at all (HTTP 200). Surface it as a miss.
-      throw new Error(`Precisely: no match (${status || 'empty response'})`);
+      // ZERO_RESULTS = no match at all (HTTP 200). Surface it as a coverage miss.
+      throw noMatchError(`Precisely: no match (${status || 'empty response'})`);
     }
 
     const item = results[0];
