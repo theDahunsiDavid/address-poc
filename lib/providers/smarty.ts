@@ -2,6 +2,7 @@ import type { AddressProvider, VerifyInput } from './types';
 import type { CanonicalAddress, NormalizedResult, Suggestion } from '../schema';
 import { getKey, getSecret } from '../config';
 import { fetchWithRetry } from '../http';
+import { noMatchError } from '../errors';
 
 // Smarty (https://www.smarty.com) adapter — capture + verify.
 // Contract from their docs (2026-02-16, live-probed from this machine):
@@ -192,7 +193,7 @@ export const smarty: AddressProvider = {
 
     const data = JSON.parse(body) as unknown;
     const item = firstArray(data).filter(isRecord)[0];
-    if (!item) throw new Error('Smarty: no match for address');
+    if (!item) throw noMatchError('Smarty: no match for address');
     const comps = isRecord(item.components) ? item.components : item;
     return { canonical: canonicalFrom(item, comps, geoOf(item), 'smarty'), raw: data };
   },
