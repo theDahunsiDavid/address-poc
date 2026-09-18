@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { getProvider } from '@/lib/providers';
 import { keyStatus, type ProviderId } from '@/lib/config';
 import { timeCall } from '@/lib/timing';
-import { errorMessage } from '@/lib/errors';
+import { errorMessage, type CodedError } from '@/lib/errors';
 import { providerStatus } from '@/lib/verdict';
 import type { VerifyInput } from '@/lib/providers/types';
 
@@ -60,6 +60,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       providerStatus: providerStatus(providerId, result.raw),
     });
   } catch (err) {
-    return res.status(200).json({ ok: false, error: errorMessage(err) });
+    return res.status(200).json({
+      ok: false,
+      error: errorMessage(err),
+      // 'no-match' on the throw means a real coverage miss; anything untagged
+      // is a transport/config failure the runner will retry or flag.
+      code: err instanceof Error && 'code' in err ? (err as CodedError).code : undefined,
+    });
   }
 }
