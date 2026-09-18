@@ -2,6 +2,7 @@ import type { AddressProvider, VerifyInput } from './types';
 import type { CanonicalAddress, NormalizedResult, Suggestion } from '../schema';
 import { getKey } from '../config';
 import { fetchWithRetry } from '../http';
+import { noMatchError } from '../errors';
 
 // Loqate adapter — capture (Interactive Find / Retrieve v1.10, json3.ws) and
 // verify (Cleansing International Batch v1.20, json6.ws POST). Nigeria via
@@ -152,7 +153,7 @@ export const loqate: AddressProvider = {
     const data = (await res.json()) as VerifyResponse;
 
     const match = data[0]?.Matches?.[0];
-    if (!match) throw new Error('Loqate verify: no matches');
+    if (!match) throw noMatchError('Loqate verify: no matches');
 
     const canonical: CanonicalAddress = {
       line1: clean(match.Address1),
