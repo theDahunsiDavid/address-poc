@@ -95,9 +95,11 @@ function havKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
 // ---------- CLI ----------
 let runArg: string | undefined;
 let fixturePath = resolve('data/nigeria-verify-fixtures2.json');
+let mergeBase: string | undefined;
 for (let i = 2; i < process.argv.length; i++) {
   const a = process.argv[i];
   if (a === '--fixture') fixturePath = resolve(process.argv[++i]);
+  else if (a === '--merge-base') mergeBase = process.argv[++i];
   else if (!a.startsWith('-')) runArg = a;
 }
 const base = resolve('logs/verify-compare');
@@ -110,7 +112,22 @@ if (runArg) {
   runDir = join(base, dirs[dirs.length - 1]);
   console.log(`using latest run: ${dirs[dirs.length - 1]}`);
 }
-const results: VerifyRecord[] = JSON.parse(readFileSync(join(runDir, 'results.json'), 'utf8'));
+let results: VerifyRecord[] = JSON.parse(readFileSync(join(runDir, 'results.json'), 'utf8'));
+
+// Patch overlay: replace the base run's cells with this run's records where (provider, fixtureId)
+// match, write a merged results.json to <base>-patched, and score that.
+if (mergeBase) {
+  const baseDir = mergeBase.includes('/') ? resolve(mergeBase) : join(base, mergeBase);
+  const baseRecords: VerifyRecord[] = JSON.parse(readFileSync(join(baseDir, 'results.json'), 'utf8'));
+  const patched = new Map(results.map(r => [`${r.provider}|${r.fixtureId}`, r]));
+  const merged = baseRecords.map(r => patched.get(`${r.provider}|${r.fixtureId}`) ?? r);
+  const mergedDir = `${baseDir}-patched`;
+  mkdirSync(mergedDir, { recursive: true });
+  writeFileSync(join(mergedDir, 'results.json'), `${JSON.stringify(merged, null, 2)}\n`);
+  console.log(`merged ${patched.size} patch cell(s) -> ${mergedDir}`);
+  results = merged;
+  runDir = mergedDir;
+}
 const fixtures: Fixture[] = JSON.parse(readFileSync(fixturePath, 'utf8'));
 const fx = new Map(fixtures.map(f => [f.id, f]));
 
