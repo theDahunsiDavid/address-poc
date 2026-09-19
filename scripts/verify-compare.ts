@@ -38,6 +38,9 @@ function argValue(name: string): string | undefined {
 
 const isProbe = argFlag('--probe');
 const fixturePath = argValue('--fixture') ?? 'data/nigeria-verify-fixtures2.json';
+const providerFilter = process.argv
+  .map((a, i) => (a === '--provider' ? process.argv[i + 1] : undefined))
+  .filter((v): v is string => !!v);
 
 // --- env --------------------------------------------------------------------
 
@@ -129,7 +132,12 @@ async function main(): Promise<void> {
   loadDotEnv();
 
   const fixtures = loadFixtures();
-  const verifyProviders = Object.values(providers).filter((p) => p.verify);
+  let verifyProviders = Object.values(providers).filter((p) => p.verify);
+  if (providerFilter.length) {
+    const want = new Set(providerFilter);
+    verifyProviders = verifyProviders.filter((p) => want.has(p.id));
+    if (!verifyProviders.length) throw new Error(`no verify-capable providers matched --provider ${providerFilter.join(', ')}`);
+  }
   const summaryLines: string[] = [];
 
   console.log(
@@ -142,6 +150,7 @@ async function main(): Promise<void> {
     '',
     `- run: ${new Date().toISOString()}`,
     `- fixture: ${isProbe ? '15 Admiralty Way, Ikoyi, Lagos (built-in probe)' : fixturePath}`,
+    `- providers: ${verifyProviders.map((p) => p.id).join(', ')}`,
     `- calls: ${fixtures.length} x ${verifyProviders.length} = ${fixtures.length * verifyProviders.length}`,
   );
 
